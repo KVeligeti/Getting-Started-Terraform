@@ -23,17 +23,21 @@ resource "aws_vpc" "app" {
   cidr_block           = var.networking_details.cidr_block
   enable_dns_hostnames = var.networking_details.enable_dns_hostnames
 
+  tags = local.common_tags
 }
 
 resource "aws_internet_gateway" "app" {
   vpc_id = aws_vpc.app.id
 
+  tags = local.common_tags
 }
 
 resource "aws_subnet" "public_subnet1" {
   cidr_block              = var.networking_details.cidr_block_public
   vpc_id                  = aws_vpc.app.id
   map_public_ip_on_launch = var.networking_details.map_public_ip_on_launch
+
+  tags = local.common_tags
 }
 
 # ROUTING #
@@ -44,6 +48,8 @@ resource "aws_route_table" "app" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.app.id
   }
+
+  tags = local.common_tags
 }
 
 resource "aws_route_table_association" "app_subnet1" {
@@ -72,6 +78,8 @@ resource "aws_security_group" "nginx_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = local.common_tags
 }
 
 # INSTANCES #
@@ -80,11 +88,13 @@ resource "aws_instance" "nginx1" {
   instance_type          = "t3.micro"
   subnet_id              = aws_subnet.public_subnet1.id
   vpc_security_group_ids = [aws_security_group.nginx_sg.id]
-  
 
-  tags = {
-    Name = "GlobalWebApp"
-  }
+
+  # tags = {
+  #   Name = "GlobalWebAppUpdt"
+  # }
+
+  tags = merge({ Name = "GlobalWebAppUpdate" }, local.common_tags)
 
   user_data = <<EOF
 #! /bin/bash
